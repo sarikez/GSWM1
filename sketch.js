@@ -141,7 +141,7 @@ function mousePressed() {
             selectedClothing: selectedClothing
           });
         }
-        window.location.href = "makeup.html";
+        window.location.href = "https://klaronator.github.io/GSWM2/"; 
         return;
       }
     }

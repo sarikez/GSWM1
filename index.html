@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>University Dressup Game</title>
+
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+
+  <!-- Firebase (compat version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+  <!-- Firebase Configuration -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAivQ93eA06kw_UayW9oyEtUmJzqslUZB4",
+      authDomain: "gswm-c70f0.firebaseapp.com",
+      projectId: "gswm-c70f0",
+      databaseURL: "https://gswm-c70f0-default-rtdb.europe-west1.firebasedatabase.app/",
+      storageBucket: "gswm-c70f0.firebasestorage.app",
+      messagingSenderId: "768190623798",
+      appId: "1:768190623798:web:d29516394ede0c5d2f2897"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // **IMPORTANT: create a global database reference here**
+ 
+  </script>
+
+  <!-- Your styles -->
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <main></main>
+
+  <!-- Your game logic -->
+  <script src="sketch.js"></script>
+</body>
+</html>

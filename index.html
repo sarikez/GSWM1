@@ -1,15 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.7/lib/p5.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.7/lib/addons/p5.sound.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="utf-8" />
+    <title>Dress‑Up Game – Final Look</title>
 
+    <!-- p5.js -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.5/lib/p5.js"></script>
+
+    <!-- Firebase (compat Realtime DB) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <main>
-    </main>
-    <script src="sketch.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "...",
+        authDomain: "gswm-c70f0.firebaseapp.com",
+        databaseURL: "https://gswm-c70f0-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gswm-c70f0",
+        storageBucket: "gswm-c70f0.appspot.com",
+        messagingSenderId: "768190623798",
+        appId: "1:768190623798:web:d29516394ede0c5d2f2897"
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+    </script>
+
+    <!-- Your p5 sketch -->
+    <script src="final.js"></script>
   </body>
 </html>

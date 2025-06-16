@@ -1,124 +1,187 @@
-let gamenameImg, playBtnImg;
-let wardrobeBg;
+// === GLOBAL VARIABLES ===
+let gameState = "start";
+let scaleFactor = 700 / 2400;
+let database;
 
+let gamenameImg, playBtnImg, makeupBtnImg;
+let wardrobeImg;
 let clothes = [
   "blackboots", "blackhoodie", "blackshoes", "blackskirt", "blacktop",
-  "bluehoodie", "shorts", "dress", "furryboots", "jeans", "redshoes",
-  "redskirt", "redtop", "sweatpants", "trousers", "whiteboots", "whitetop", "yellowshoes"
+  "bluehoodie", "shorts", "dress", "furryboots", "jeans",
+  "redshoes", "redskirt", "redtop", "sweatpants", "trousers",
+  "whiteboots", "whitetop", "yellowshoes"
 ];
 
-let wardrobeClothesImgs = {};
-let bodyClothesImgs = {};
+let wardrobeItems = {};
+let bodyItems = {};
 let commentImgs = {};
+let activeComments = [];
 
-let scaleFactor = 500 / 1800; // scale from 1800 width to 500 width
+let selectedClothing = {
+  top: null,
+  bottom: null,
+  shoes: null
+};
 
-let gameState = "start"; // 'start' or 'wardrobe'
-let clothesWorn = {}; // track worn clothes
-let commentsOnScreen = []; // {name, x, y} in scaled coords
+let clothingCategories = {
+  blacktop: "top", redtop: "top", whitetop: "top",
+  blackhoodie: "top", bluehoodie: "top", dress: "top",
+  blackskirt: "bottom", redskirt: "bottom", jeans: "bottom",
+  shorts: "bottom", sweatpants: "bottom", trousers: "bottom",
+  blackboots: "shoes", blackshoes: "shoes", redshoes: "shoes",
+  whiteboots: "shoes", furryboots: "shoes", yellowshoes: "shoes"
+};
 
+// === LOAD IMAGES ===
 function preload() {
   gamenameImg = loadImage("gamename.png");
   playBtnImg = loadImage("play.png");
-  wardrobeBg = loadImage("WARDROBE.PNG");  // uppercase PNG here
-  
-  for (let c of clothes) {
-    wardrobeClothesImgs[c] = loadImage(`1_${c}.PNG`);     // uppercase PNG extension
-    bodyClothesImgs[c] = loadImage(`1B_${c}.PNG`);        // uppercase PNG extension
-    commentImgs[c] = loadImage(`C_${c}.png`);             // lowercase png extension
+  makeupBtnImg = loadImage("makeupbutton.png");
+  wardrobeImg = loadImage("WARDROBE.PNG");
+
+  for (let item of clothes) {
+    wardrobeItems[item] = loadImage("1_" + item + ".PNG");
+    bodyItems[item] = loadImage("1B_" + item + ".PNG");
+    commentImgs[item] = loadImage("C_" + item + ".png");
   }
 }
 
+// === SETUP ===
 function setup() {
   createCanvas(700, 500);
   imageMode(CORNER);
-  for (let c of clothes) {
-    clothesWorn[c] = false;
+  noSmooth();
+
+  if (typeof firebase !== "undefined" && !database) {
+    database = firebase.database();
   }
 }
 
+// === DRAW ===
 function draw() {
-  background(220);
+  background(230,140,180);
+  push();
   scale(scaleFactor);
-  
+
   if (gameState === "start") {
     drawStartScreen();
   } else if (gameState === "wardrobe") {
     drawWardrobeScreen();
   }
-}
 
-function drawStartScreen() {
-  let gnX = (1800 - gamenameImg.width) / 2;
-  let gnY = 300;
-  image(gamenameImg, gnX, gnY);
-  
-  let pbX = (1800 - playBtnImg.width) / 2;
-  let pbY = 1400;
-  image(playBtnImg, pbX, pbY);
-}
+  pop();
 
-function drawWardrobeScreen() {
-  image(wardrobeBg, 0, 0);
-  
-  for (let c of clothes) {
-    image(wardrobeClothesImgs[c], 0, 0);
-  }
-  
-  for (let c of clothes) {
-    if (clothesWorn[c]) {
-      image(bodyClothesImgs[c], 0, 0);
+  // === Draw comment bubbles following the mouse with fixed offsets ===
+  for (let cmt of activeComments) {
+    let img = commentImgs[cmt.name];
+    if (img) {
+      let displayWidth = img.width * 0.15;
+      let displayHeight = img.height * 0.15;
+      let cx = mouseX + cmt.dx;
+      let cy = mouseY + cmt.dy;
+      image(img, cx, cy, displayWidth, displayHeight);
     }
   }
-  
-  resetMatrix();
-  
-  for (let i = 0; i < commentsOnScreen.length; i++) {
-    let cmt = commentsOnScreen[i];
-    let cmtImg = commentImgs[cmt.name];
-    let w = cmtImg.width * scaleFactor;
-    let h = cmtImg.height * scaleFactor;
-    image(cmtImg, cmt.x, cmt.y + i * (h * 0.8), w, h);
-  }
 }
 
+// === START SCREEN ===
+function drawStartScreen() {
+  image(gamenameImg, 0, 0);
+  image(playBtnImg, 0, 0);
+}
+
+// === WARDROBE SCREEN ===
+function drawWardrobeScreen() {
+  image(wardrobeImg, 0, 0);
+
+  // ✅ NEW ORDER: shoes (bottom layer), then bottoms, then tops (top layer)
+  if (selectedClothing["shoes"]) {
+    image(bodyItems[selectedClothing["shoes"]], 0, 0);
+  }
+
+  if (selectedClothing["bottom"]) {
+    image(bodyItems[selectedClothing["bottom"]], 0, 0);
+  }
+
+  if (selectedClothing["top"]) {
+    image(bodyItems[selectedClothing["top"]], 0, 0);
+  }
+
+  // Draw wardrobe icons
+  for (let item of clothes) {
+    image(wardrobeItems[item], 0, 0);
+  }
+
+  image(makeupBtnImg, 0, 0);
+}
+
+// === CLICK HANDLING ===
 function mousePressed() {
+  let mx = mouseX / scaleFactor;
+  let my = mouseY / scaleFactor;
+
   if (gameState === "start") {
-    let mx = mouseX / scaleFactor;
-    let my = mouseY / scaleFactor;
-    
-    let pbX = (1800 - playBtnImg.width) / 2;
-    let pbY = 1400;
-    let pbW = playBtnImg.width;
-    let pbH = playBtnImg.height;
-    
-    if (mx > pbX && mx < pbX + pbW && my > pbY && my < pbY + pbH) {
+    let pbX = 0, pbY = 0, pbW = playBtnImg.width, pbH = playBtnImg.height;
+    if (mx >= pbX && mx <= pbX + pbW && my >= pbY && my <= pbY + pbH) {
       gameState = "wardrobe";
     }
   } else if (gameState === "wardrobe") {
-    let mx = mouseX / scaleFactor;
-    let my = mouseY / scaleFactor;
-    
-    for (let c of clothes) {
-      if (isPixelOpaque(wardrobeClothesImgs[c], mx, my)) {
-        clothesWorn[c] = true;
-        
-        let scaledX = mouseX + 5;
-        let scaledY = mouseY + 5;
-        commentsOnScreen.push({name: c, x: scaledX, y: scaledY});
-        break;
+    makeupBtnImg.loadPixels();
+    let px = floor(mx);
+    let py = floor(my);
+    if (
+      px >= 0 && px < makeupBtnImg.width &&
+      py >= 0 && py < makeupBtnImg.height
+    ) {
+      let idx = 4 * (py * makeupBtnImg.width + px);
+      let alpha = makeupBtnImg.pixels[idx + 3];
+      if (alpha > 10) {
+        if (typeof database !== 'undefined') {
+          database.ref("arrays").set({
+            selectedClothing: selectedClothing
+          });
+        }
+        window.location.href = "makeup.html";
+        return;
+      }
+    }
+
+    for (let item of clothes) {
+      let img = wardrobeItems[item];
+      if (!img) continue;
+
+      if (mx >= 0 && mx < img.width && my >= 0 && my < img.height) {
+        img.loadPixels();
+        let px = floor(mx);
+        let py = floor(my);
+        let idx = 4 * (py * img.width + px);
+        let alpha = img.pixels[idx + 3];
+
+        if (alpha > 10) {
+          let cat = clothingCategories[item];
+          if (!cat) continue;
+
+          if (selectedClothing[cat] === item) {
+            selectedClothing[cat] = null;
+          } else {
+            selectedClothing[cat] = item;
+          }
+
+          // Random offset around mouse in all directions
+          let angle = random(TWO_PI);
+          let radius = random(60, 120);
+          let dx = cos(angle) * radius;
+          let dy = sin(angle) * radius;
+
+          activeComments.push({
+            name: item,
+            dx: dx,
+            dy: dy
+          });
+
+          break;
+        }
       }
     }
   }
-}
-
-function isPixelOpaque(img, mx, my) {
-  if (mx < 0 || my < 0 || mx >= img.width || my >= img.height) return false;
-  
-  img.loadPixels();
-  let px = floor(mx);
-  let py = floor(my);
-  let idx = 4 * (py * img.width + px);
-  let alpha = img.pixels[idx + 3];
-  return alpha > 10;
 }
